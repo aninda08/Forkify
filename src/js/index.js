@@ -2,10 +2,12 @@
 import Search from './models/Search';
 import Recipe from './models/Recipe';
 import List from './models/List';
+import Likes from './models/Likes';
 import { elements, renderLoader, clearLoader} from "./views/base";
 import * as searchView from "./views/searchView";
 import * as recipeView from "./views/recipeView";
 import * as listView from "./views/listView";
+import * as likesView from "./views/likesView";
 
 /**Global State of the app
  * - Search object
@@ -91,7 +93,7 @@ const controlRecipe = async () => {
         if(state.search) searchView.highlightSelected(id);
         //6. Render Recipe 
         clearLoader();
-        recipeView.renderRecipe(state.recipe);
+        recipeView.renderRecipe(state.recipe, state.likes.isLiked(id));
         } catch (error) {
             alert(error);
         }
@@ -116,6 +118,35 @@ const controlList = () => {
         listView.renderItem(item);
     });
 } 
+
+/**
+ * LIKE Controller
+ */
+const controllerLike = () => {
+    //Create a new list if there is none yet 
+    if(!state.likes) state.likes = new Likes();
+
+    const currentId = state.recipe.id;
+
+    if(!state.likes.isLiked(currentId)) {
+        const newLike = state.likes.addLikes(
+            currentId,
+            state.recipe.title,
+            state.recipe.author,
+            state.recipe.img
+        );
+
+        likesView.toggleLikeBtn(true);
+        likesView.renderLike(newLike);
+    } else {
+        state.likes.deleteLikes(currentId);
+
+        likesView.toggleLikeBtn(false);
+        likesView.deleteLike(currentId);
+    }
+
+    likesView.toggleLikeMenu(state.likes.getNumLikes());
+};
 
 //Handle delete and update list item events
 elements.shopping.addEventListener('click', e => {
@@ -144,6 +175,19 @@ elements.recipe.addEventListener('click', e => {
         recipeView.updateServingsIngredients(state.recipe);
     } else if(e.target.matches('.recipe__btn--add, .recipe__btn--add *')) {
         controlList();
+    } else if(e.target.matches('.recipe__love, .recipe__love *')) {
+        controllerLike();
     }
 });
 
+//handling likes button clicks
+elements.recipe.addEventListener('click', e => {
+
+});
+
+window.addEventListener('load', () => {
+    state.likes = new Likes();
+    state.likes.readStorage();
+    likesView.toggleLikeMenu(state.likes.getNumLikes());
+    state.likes.likes.forEach(like => likesView.renderLike(likesView));
+});
