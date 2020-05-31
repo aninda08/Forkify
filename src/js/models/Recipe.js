@@ -24,7 +24,70 @@ export default class Recipe {
         this.time = periods * 15;
     }
     
-    calcSevings() {
+    calcServings() {
         this.servings = 4;
+    }
+
+    updateServings(type) {
+        //Servings
+        const newServings = type === 'dec' ? this.servings - 1 : this.servings + 1;
+        //ingredients
+        this.ingredients.forEach(ing => {
+            ing.count *= (newServings / this.servings);
+        })
+        this.servings = newServings;
+    }
+
+    parseIngredients() {
+        const newIngredients = this.ingredients.map(el => {
+            const unitsLong = ['tablespoon', 'tablespoons', 'ounces', 'ounce', 'teaspoons', 'teaspoon', 'cups', 'pounds', ];
+            const unitsShort = ['tbsp','tbsp','oz','oz','tsp','tsp','cup','pound'];
+            const units = [...unitsLong, 'kg', 'g'];
+            //1. Uniform units
+            let ingredient = el.toLowerCase();
+            unitsLong.forEach((unit, i) => {
+                ingredient = ingredient.replace(unit, unitsShort[i]);
+            })
+            //2. Remove parentheses
+            ingredient = ingredient.replace(/ *\([^)]*\) */g, " ");
+            //3. Parse ingredients into count, unit and ingredients
+            const arrIng = ingredient.split(" ");
+            const unitIndex = arrIng.findIndex(el2 => units.includes(el2));
+
+            let objIng;
+            if(unitIndex > -1) {
+                const arrCount = arrIng.slice(0, unitIndex);
+
+                let count;
+                if(arrCount.length === 1)
+                    count = eval(arrIng[0].replace('-', '+'));
+                else
+                    count = eval(arrCount.join("+"));
+
+                    objIng = {
+                        count,
+                        unit: arrIng[unitIndex],
+                        ingredient: arrIng.slice(unitIndex + 1).join(' ')
+                    }
+            }
+            else if(parseInt(arrIng[0],10)) {
+                objIng = {
+                    count: parseInt(arrIng[0],10),
+                    unit: '',
+                    ingredient: arrIng.slice(1).join(' ')
+                }
+            }
+            else if(unitIndex === -1) {
+                objIng = {
+                    count: 1,
+                    unit: '',
+                    ingredient
+                }
+            }
+
+            return objIng;
+        });
+
+        this.ingredients = newIngredients;
     }
 }

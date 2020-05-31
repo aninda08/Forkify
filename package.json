@@ -31,6 +31,7 @@
     "axios": "^0.19.2",
     "babel-polyfill": "^6.26.0",
     "core-js": "^3.6.5",
+    "fractional": "^1.0.0",
     "regenerator-runtime": "^0.13.5"
   }
 }
